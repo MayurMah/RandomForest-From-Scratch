@@ -1,6 +1,6 @@
 from decision_tree import DecisionTree
 import csv
-import numpy as np  # http://www.numpy.org
+import numpy as np
 import ast
 import random
 
@@ -32,40 +32,37 @@ class RandomForest(object):
         self.num_trees = num_trees
         self.decision_trees = [DecisionTree() for i in range(num_trees)]
 
-
     def _bootstrapping(self, XX, n):
+        """Create a sample dataset of size n by sampling with replacement from the original dataset XX."""
         # Reference: https://en.wikipedia.org/wiki/Bootstrapping_(statistics)
-        #
-        # TODO: Create a sample dataset of size n by sampling with replacement
-        #       from the original dataset XX.
-        # Note that you would also need to record the corresponding class labels
+        # Note that we would also need to record the corresponding class labels
         # for the sampled records for training purposes.
 
-        samples = [] # sampled dataset
+        samples = []  # sampled dataset
         labels = []  # class labels for the sampled records
         data = [random.choice(XX) for _ in range(n)]
-        samples =  [row[:-1] for row in data]
-        labels =  [row[-1] for row in data]
+        samples = [row[:-1] for row in data]
+        labels = [row[-1] for row in data]
         return (samples, labels)
 
-
     def bootstrapping(self, XX):
-        # Initializing the bootstap datasets for each tree
+        """Initializing the bootstap datasets for each tree"""
+
         for i in range(self.num_trees):
             data_sample, data_label = self._bootstrapping(XX, len(XX))
             self.bootstraps_datasets.append(data_sample)
             self.bootstraps_labels.append(data_label)
 
-
     def fitting(self):
-        # TODO: Train `num_trees` decision trees using the bootstraps datasets
-        # and labels by calling the learn function from your DecisionTree class.
-        for i in range(self.num_trees):
-            self.decision_trees[i].learn(self.bootstraps_datasets[i],self.bootstraps_labels[i])
-        #pass
+        """Train `num_trees` decision trees using the bootstraps datasets
+        and labels by calling the learn function from your DecisionTree class."""
 
+        for i in range(self.num_trees):
+            self.decision_trees[i].learn(self.bootstraps_datasets[i], self.bootstraps_labels[i])
 
     def voting(self, X):
+        """Find labels for out-of-bag trees and use majority vote to decide the final label"""
+
         y = []
 
         for record in X:
@@ -73,7 +70,7 @@ class RandomForest(object):
             #   1. Find the set of trees that consider the record as an
             #      out-of-bag sample.
             #   2. Predict the label using each of the above found trees.
-            #   3. Use majority vote to find the final label for this recod.
+            #   3. Use majority vote to find the final label for this record.
             votes = []
             for i in range(len(self.bootstraps_datasets)):
                 dataset = self.bootstraps_datasets[i]
@@ -82,13 +79,12 @@ class RandomForest(object):
                     effective_vote = OOB_tree.classify(record)
                     votes.append(effective_vote)
 
-
             counts = np.bincount(votes)
 
             if len(counts) == 0:
-                # TODO: Special case
-                #  Handle the case where the record is not an out-of-bag sample
-                #  for any of the trees.
+                # Special case
+                # Handle the case where the record is not an out-of-bag sample
+                # for any of the trees.
                 for i in range(len(self.bootstraps_datasets)):
                     dataset = self.bootstraps_datasets[i]
                     OOB_tree = self.decision_trees[i]
@@ -97,18 +93,18 @@ class RandomForest(object):
 
                 counts = np.bincount(votes)
                 y = np.append(y, np.argmax(counts))
-                #pass
+                # pass
             else:
                 y = np.append(y, np.argmax(counts))
 
         return y
 
-# DO NOT change the main function apart from the forest_size parameter!
+
 def main():
     X = list()
     y = list()
     XX = list()  # Contains data features and data labels
-    numerical_cols = set([0,10,11,12,13,15,16,17,18,19,20]) # indices of numeric attributes (columns)
+    numerical_cols = set([0, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20])  # indices of numeric attributes (columns)
 
     # Loading data set
     print("reading data")
@@ -152,7 +148,7 @@ def main():
     accuracy = float(results.count(True)) / float(len(results))
 
     print("accuracy: %.4f" % accuracy)
-    print("OOB estimate: %.4f" % (1-accuracy))
+    print("OOB estimate: %.4f" % (1 - accuracy))
 
 
 if __name__ == "__main__":
